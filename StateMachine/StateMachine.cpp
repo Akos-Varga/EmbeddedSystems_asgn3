@@ -12,9 +12,20 @@ PowerOnSelfTest* PowerOnSelfTest::getInstance() {
 }
 
 void PowerOnSelfTest::SystemSelftest(EmbeddedSystemX* context) {
+    char userInput;
     std::cout << "Performing system self-test...\n";
-    std::cout << "Self-test failed! Transitioning to Failure state.\n";
-    ChangeState(context, Failure::getInstance());
+    std::cout << "Enter result (p/f):";
+    std::cin >> userInput;
+
+    if(userInput == 'p'){
+        std::cout << "Self-test pass! Transitioning to Initialization state.\n";
+        ChangeState(context, Initializing::getInstance());
+    }
+    else {
+        std::cout << "Self-test failed! Transitioning to Failure state.\n";
+        ChangeState(context, Failure::getInstance());
+    }
+
 }
 
 // Failure Singleton Instance
@@ -26,6 +37,17 @@ Failure* Failure::getInstance() {
 void Failure::Restart(EmbeddedSystemX* context) {
     std::cout << "Restarting system... Transitioning back to PowerOnSelfTest.\n";
     ChangeState(context, PowerOnSelfTest::getInstance());
+}
+
+// Initializing Singleton Instance
+Initializing* Initializing::getInstance() {
+    static Initializing instance;
+    return &instance;
+}
+
+void Initializing::Initialized(EmbeddedSystemX* context) {
+    std::cout << "System Initialized... Transitioning to Operational mode.\n";
+    // ChangeState(context, PowerOnSelfTest::getInstance());
 }
 
 // EmbeddedSystemX Definitions
@@ -41,4 +63,8 @@ void EmbeddedSystemX::SystemSelftest() {
 
 void EmbeddedSystemX::Restart() {
     currentState->Restart(this);
+}
+
+void EmbeddedSystemX::Initialized() {
+    currentState->Initialized(this);
 }

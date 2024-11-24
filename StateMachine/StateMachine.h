@@ -6,6 +6,7 @@
 // Forward declarations
 class EmbeddedSystemX;
 class Failure;
+class Initializing;
 
 // Base State Class
 class State {
@@ -13,6 +14,7 @@ public:
     virtual ~State() {}
     virtual void SystemSelftest(EmbeddedSystemX*) {}
     virtual void Restart(EmbeddedSystemX*) {}
+    virtual void Initialized(EmbeddedSystemX*) {}
 
     static void ChangeState(EmbeddedSystemX* context, State* newState);
 };
@@ -31,6 +33,13 @@ public:
     void Restart(EmbeddedSystemX* context) override;
 };
 
+// Concrete State: Initializing
+class Initializing : public State {
+public:
+    static Initializing* getInstance();
+    void Initialized(EmbeddedSystemX* context) override;
+};
+
 // EmbeddedSystemX Context Class
 class EmbeddedSystemX {
 private:
@@ -41,6 +50,7 @@ public:
     void setState(State* newState);
     void SystemSelftest();
     void Restart();
+    void Initialized();
 };
 
 #endif // STATEMACHINE_H
