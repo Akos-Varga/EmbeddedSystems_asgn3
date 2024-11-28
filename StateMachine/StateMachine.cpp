@@ -11,19 +11,13 @@ PowerOnSelfTest* PowerOnSelfTest::getInstance() {
     if (!instance) instance = new PowerOnSelfTest();
     return instance;
 }
-void PowerOnSelfTest::SystemSelftest(EmbeddedSystemX* context) {
-    std::cout << "Performing self-test...\n";
-    char result;
-    std::cout << "Enter test result (o for TestOk, f for TestFailed): ";
-    std::cin >> result;
-    if (result == 'o') {
+void PowerOnSelfTest::SelfTestOK(EmbeddedSystemX* context) {
         std::cout << "Self-test passed! Transitioning to Initializing state.\n";
         ChangeState(context, Initializing::getInstance());
-    }
-    else {
-        std::cout << "Self-test failed! Transitioning to Failure state.\n";
-        ChangeState(context, Failure::getInstance());
-    }
+}
+void PowerOnSelfTest::SelfTestFailed(EmbeddedSystemX* context) {
+    std::cout << "Self-test failed! Transitioning to Failure state.\n";
+    ChangeState(context, Failure::getInstance());
 }
 
 // Failure State
@@ -32,9 +26,12 @@ Failure* Failure::getInstance() {
     if (!instance) instance = new Failure();
     return instance;
 }
-void Failure::Restart(EmbeddedSystemX* context) {
+void Failure::RestartF(EmbeddedSystemX* context) {
     std::cout << "Restarting system... Transitioning back to PowerOnSelfTest.\n";
     ChangeState(context, PowerOnSelfTest::getInstance());
+}
+void Failure::Exit(EmbeddedSystemX* context) {
+    std::cout << "Exiting program.\n";
 }
 
 // Initializing State
@@ -43,8 +40,8 @@ Initializing* Initializing::getInstance() {
     if (!instance) instance = new Initializing();
     return instance;
 }
-void Initializing::StartInitializing(EmbeddedSystemX* context) {
-    std::cout << "Initializing system...\n";
+void Initializing::Initialized(EmbeddedSystemX* context) {
+    std::cout << "System initialized...\n";
     ChangeState(context, Operational::getInstance());
 }
 
@@ -54,63 +51,17 @@ Operational* Operational::getInstance() {
     if (!instance) instance = new Operational();
     return instance;
 }
-void Operational::ConfigurationEnded(EmbeddedSystemX* context) {
-    std::cout << "Configuration ended. Transitioning to Ready state.\n";
-    ChangeState(context, Ready::getInstance());
-}
-void Operational::Exit(EmbeddedSystemX* context) {
-    std::cout << "Exiting system...\n";
-}
-
-// Ready State
-Ready* Ready::instance = nullptr;
-Ready* Ready::getInstance() {
-    if (!instance) instance = new Ready();
-    return instance;
-}
-void Ready::Start(EmbeddedSystemX* context) {
-    std::cout << "Starting system... Transitioning to RealTimeLoop state.\n";
-    ChangeState(context, RealTimeLoop::getInstance());
-}
-void Ready::Stop(EmbeddedSystemX* context) {
-    std::cout << "Stopping system...\n";
-}
-
-// RealTimeLoop State
-RealTimeLoop* RealTimeLoop::instance = nullptr;
-RealTimeLoop* RealTimeLoop::getInstance() {
-    if (!instance) instance = new RealTimeLoop();
-    return instance;
-}
-void RealTimeLoop::Stop(EmbeddedSystemX* context) {
-    std::cout << "Stopping system...\n";
-    ChangeState(context, Ready::getInstance());
-}
-void RealTimeLoop::Suspend(EmbeddedSystemX* context) {
-    std::cout << "Suspending system...\n";
-    ChangeState(context, Suspended::getInstance());
-}
-
-// Suspended State
-Suspended* Suspended::instance = nullptr;
-Suspended* Suspended::getInstance() {
-    if (!instance) instance = new Suspended();
-    return instance;
-}
-void Suspended::Resume(EmbeddedSystemX* context) {
-    std::cout << "Resuming system... Transitioning to RealTimeLoop state.\n";
-    ChangeState(context, RealTimeLoop::getInstance());
+void Operational::RestartO(EmbeddedSystemX* context) {
+    std::cout << "Restarting system...\n";
+    ChangeState(context, PowerOnSelfTest::getInstance());
 }
 
 // EmbeddedSystemX Context Class
 EmbeddedSystemX::EmbeddedSystemX() : currentState(PowerOnSelfTest::getInstance()) {}
 
-void EmbeddedSystemX::SystemSelftest() { currentState->SystemSelftest(this); }
-void EmbeddedSystemX::StartInitializing() { currentState->StartInitializing(this); }
-void EmbeddedSystemX::ConfigurationEnded() { currentState->ConfigurationEnded(this); }
-void EmbeddedSystemX::Start() { currentState->Start(this); }
-void EmbeddedSystemX::Stop() { currentState->Stop(this); }
-void EmbeddedSystemX::Suspend() { currentState->Suspend(this); }
-void EmbeddedSystemX::Resume() { currentState->Resume(this); }
-void EmbeddedSystemX::Restart() { currentState->Restart(this); }
+void EmbeddedSystemX::SelfTestFailed() { currentState->SelfTestFailed(this); }
+void EmbeddedSystemX::SelfTestOK() { currentState->SelfTestOK(this); }
+void EmbeddedSystemX::RestartF() { currentState->RestartF(this); }
 void EmbeddedSystemX::Exit() { currentState->Exit(this); }
+void EmbeddedSystemX::Initialized() { currentState->Initialized(this); }
+void EmbeddedSystemX::RestartO() { currentState->RestartO(this); }
